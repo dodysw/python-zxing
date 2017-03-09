@@ -16,7 +16,7 @@ class BarCodeReader():
   location = ""
   command = "java"
   libs = ["javase/javase.jar", "core/core.jar"]
-  args = ["-cp", "LIBS", "com.google.zxing.client.j2se.CommandLineRunner"]
+  args = ["-Djava.awt.headless=true", "-cp", "LIBS", "com.google.zxing.client.j2se.CommandLineRunner", "--possible_formats", "CODE_128,UPC_A", "--multi"]
 
   def __init__(self, loc=""):
     if not len(loc):
@@ -51,17 +51,14 @@ class BarCodeReader():
     codes = []
     file_results = stdout.split("\nfile:")
     for result in file_results:
+      print("Result:", result)
       lines = stdout.split("\n")
       if re.search("No barcode found", lines[0]):
-        codes.append(None)
-        continue
+          break
 
       codes.append(BarCode(result))
 
-    if SINGLE_FILE:
-      return codes[0]
-    else:
-      return codes
+    return codes
 
 #this is the barcode class which has
 class BarCode:
@@ -88,7 +85,7 @@ class BarCode:
         continue
 
       if raw_block and l != "Parsed result:":
-        self.raw += l + "\n"
+        self.raw += l
         continue
 
       if raw_block and l == "Parsed result:":
@@ -97,7 +94,7 @@ class BarCode:
         continue
 
       if parsed_block and not re.match("Found\s\d\sresult\spoints", l):
-        self.data += l + "\n"
+        self.data += l
         continue
 
       if parsed_block and re.match("Found\s\d\sresult\spoints", l):
